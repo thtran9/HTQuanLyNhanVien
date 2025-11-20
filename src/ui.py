@@ -287,29 +287,6 @@ def menu_luong():
 # ================================
 # MENU CHÍNH
 # ================================
-# def menu_chinh():
-#     while True:
-#         print("\n===== MENU CHÍNH =====")
-#         print("1. Quản lý nhân viên")
-#         print("2. Quản lý phòng ban")
-#         print("3. Quản lý chức vụ")
-#         print("4. Chấm công")
-#         print("0. Thoát")
-#         ch = input("Chọn: ").strip()
-
-#         if ch == "1":
-#             menu_nhan_vien()
-#         elif ch == "2":
-#             menu_phong_ban()
-#         elif ch == "3":
-#             menu_chuc_vu()
-#         elif ch == "4":
-#             menu_cham_cong()
-#         elif ch == "0":
-#             print("Tạm biệt!")
-#             break
-#         else:
-#             print("❌ Lựa chọn không hợp lệ!")
 
 def menu_chinh():
     while True:
@@ -317,15 +294,15 @@ def menu_chinh():
         print("1. Quản lý nhân viên")
         print("2. Quản lý phòng ban")
         print("3. Quản lý chức vụ")
-        print("4. Chấm công")
-        print("5. QUẢN LÝ LƯƠNG")  # <--- Mới
+        print("4. Quản lý lương")
+        print("5. Chấm công")
         print("0. Thoát")
         ch = input("Chọn: ").strip()
 
         if ch == "1": menu_nhan_vien()
         elif ch == "2": menu_phong_ban()
         elif ch == "3": menu_chuc_vu()
-        elif ch == "4": menu_cham_cong()
-        elif ch == "5": menu_luong() # <--- Mới
+        elif ch == "4": menu_luong()
+        elif ch == "5": menu_cham_cong()
         elif ch == "0": break
         else: print("❌ Lựa chọn không hợp lệ!")

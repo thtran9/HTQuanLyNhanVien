@@ -7,9 +7,6 @@ load_dotenv()
 mongo_uri = os.getenv("MONGO_URI")
 db_name = os.getenv("DB_NAME")
 
-if not mongo_uri:
-    raise ValueError("Không tìm thấy MONGO_URI trong file .env")
-
 def get_database():
     try:
         client = MongoClient(mongo_uri)
