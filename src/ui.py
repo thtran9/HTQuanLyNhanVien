@@ -203,10 +203,114 @@ def menu_cham_cong():
         else:
             print("❌ Lựa chọn không hợp lệ!")
 
+# ================================
+# MENU QUẢN LÝ LƯƠNG (MỚI)
+# ================================
+def menu_luong():
+    while True:
+        print("\n=== QUẢN LÝ LƯƠNG ===")
+        print("1. Tính lương tháng")
+        print("2. Xem bảng lương nhân viên")
+        print("0. Quay lại")
+        ch = input("Chọn: ").strip()
+
+        if ch == "1":
+            eid = nhap_khong_trong("Nhập ID nhân viên")
+            
+            # 1. Lấy thông tin lương cơ bản từ Chức vụ
+            nv = nv_service.tim_theo_id(eid)
+            if not nv:
+                print("❌ Không tìm thấy nhân viên!")
+                continue
+            
+            # Tìm lương cứng của chức vụ này
+            basic_salary = 0
+            for pos in pos_service.lay_ds_chuc_vu():
+                if pos['position_id'] == nv['position_id']:
+                    basic_salary = pos['basic_salary']
+                    break
+            
+            if basic_salary == 0:
+                basic_salary = nhap_float("⚠️ Không thấy mức lương quy định. Nhập lương cứng")
+
+            # 2. Quét dữ liệu chấm công để đếm ngày công và phút muộn
+            thang = nhap_khong_trong("Nhập tháng (MM)")
+            nam = nhap_khong_trong("Nhập năm (YYYY)")
+            
+            ds_cc = att_service.lay_cham_cong(eid)
+            ngay_cong = 0
+            tong_muon = 0
+            
+            for cc in ds_cc:
+                # cc['date'] dạng YYYY-MM-DD
+                y, m, d = cc['date'].split('-')
+                if y == nam and m == thang and cc.get('check_out'):
+                    ngay_cong += 1
+                    tong_muon += cc.get('late_minutes', 0)
+
+            print(f"📊 Thống kê: {ngay_cong} ngày công, {tong_muon} phút đi muộn.")
+
+            # 3. Nhập các chỉ số khác
+            ot_hours = nhap_float("Số giờ OT")
+            bonus = nhap_float("Thưởng")
+            kpi = nhap_float("Thưởng KPI")
+            allowance = nhap_float("Phụ cấp")
+
+            # 4. Tính toán
+            salary_id = f"SAL-{eid}-{nam}{thang}"
+            rec = SalaryRecord(salary_id, eid, int(thang), int(nam), basic_salary, 
+                               ngay_cong, ot_hours, bonus, kpi, allowance, tax=0)
+            
+            gross = rec.calculate_gross_salary()
+            net = rec.calculate_net_salary(tong_muon) # Trừ tiền phạt đi muộn ở đây
+
+            print("-" * 30)
+            print(f"💰 LƯƠNG THÁNG {thang}/{nam}")
+            print(f"   Lương Gross: {gross:,.0f}")
+            print(f"   Phạt đi muộn: -{tong_muon * 2000:,.0f}")
+            print(f"   Lương NET:   {net:,.0f}")
+            print("-" * 30)
+
+            if input("Lưu bảng lương? (y/n): ").lower() == 'y':
+                salary_service.luu_bang_luong(rec)
+
+        elif ch == "2":
+            eid = nhap_khong_trong("Nhập ID nhân viên")
+            ds = salary_service.lay_luong_nhan_vien(eid)
+            for l in ds:
+                print(f"Tháng {l['month']}/{l['year']} - Ngày công: {l['working_days']} - Gross: {l.get('gross_salary', 'N/A')}")
+
+        elif ch == "0":
+            break
+
 
 # ================================
 # MENU CHÍNH
 # ================================
+# def menu_chinh():
+#     while True:
+#         print("\n===== MENU CHÍNH =====")
+#         print("1. Quản lý nhân viên")
+#         print("2. Quản lý phòng ban")
+#         print("3. Quản lý chức vụ")
+#         print("4. Chấm công")
+#         print("0. Thoát")
+#         ch = input("Chọn: ").strip()
+
+#         if ch == "1":
+#             menu_nhan_vien()
+#         elif ch == "2":
+#             menu_phong_ban()
+#         elif ch == "3":
+#             menu_chuc_vu()
+#         elif ch == "4":
+#             menu_cham_cong()
+#         elif ch == "0":
+#             print("Tạm biệt!")
+#             break
+#         else:
+#             print("❌ Lựa chọn không hợp lệ!")
+
 def menu_chinh():
     while True:
         print("\n===== MENU CHÍNH =====")
@@ -214,19 +318,14 @@ def menu_chinh():
         print("2. Quản lý phòng ban")
         print("3. Quản lý chức vụ")
         print("4. Chấm công")
+        print("5. QUẢN LÝ LƯƠNG")  # <--- Mới
         print("0. Thoát")
         ch = input("Chọn: ").strip()
 
-        if ch == "1":
-            menu_nhan_vien()
-        elif ch == "2":
-            menu_phong_ban()
-        elif ch == "3":
-            menu_chuc_vu()
-        elif ch == "4":
-            menu_cham_cong()
-        elif ch == "0":
-            print("Tạm biệt!")
-            break
-        else:
-            print("❌ Lựa chọn không hợp lệ!")
+        if ch == "1": menu_nhan_vien()
+        elif ch == "2": menu_phong_ban()
+        elif ch == "3": menu_chuc_vu()
+        elif ch == "4": menu_cham_cong()
+        elif ch == "5": menu_luong() # <--- Mới
+        elif ch == "0": break
+        else: print("❌ Lựa chọn không hợp lệ!")

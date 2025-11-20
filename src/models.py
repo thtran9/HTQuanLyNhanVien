@@ -95,8 +95,38 @@ class Position:
 # 4. CHẤM CÔNG
 # ===============================
 
+# class Attendance:
+#     def __init__(self, attendance_id, employee_id, date, check_in, check_out, status,
+#                  late_minutes=0, leave_minutes=0):
+#         self.attendance_id = attendance_id
+#         self.employee_id = employee_id
+#         self.date = date
+#         self.check_in = check_in
+#         self.check_out = check_out
+#         self.status = status
+#         self.late_minutes = late_minutes
+#         self.leave_minutes = leave_minutes
+
+#     def calculate_working_hours(self):
+#         if self.check_in and self.check_out:
+#             fmt = "%H:%M"
+#             ci = datetime.strptime(self.check_in, fmt)
+#             co = datetime.strptime(self.check_out, fmt)
+#             diff = co - ci
+#             return diff.seconds // 3600  # giờ
+#         return 0
+
+
+# Thay thế class Attendance cũ bằng class này:
 class Attendance:
-    def __init__(self, attendance_id, employee_id, date, check_in, check_out, status,
+    # Định nghĩa các ca làm việc (Giờ vào - Giờ ra)
+    SHIFTS = {
+        "Sáng": ("08:00", "17:00"),
+        "Chiều": ("13:00", "22:00"),
+        "Tối": ("22:00", "06:00") # Ca qua đêm
+    }
+
+    def __init__(self, attendance_id, employee_id, date, check_in, check_out=None, status="Present",
                  late_minutes=0, leave_minutes=0):
         self.attendance_id = attendance_id
         self.employee_id = employee_id
@@ -107,16 +137,43 @@ class Attendance:
         self.late_minutes = late_minutes
         self.leave_minutes = leave_minutes
 
-    def calculate_working_hours(self):
-        if self.check_in and self.check_out:
-            fmt = "%H:%M"
-            ci = datetime.strptime(self.check_in, fmt)
-            co = datetime.strptime(self.check_out, fmt)
-            diff = co - ci
-            return diff.seconds // 3600  # giờ
-        return 0
+    def detect_shift(self):
+        """Đoán ca làm việc dựa trên giờ check-in"""
+        check_in_time = datetime.strptime(self.check_in, "%H:%M")
+        
+        if 7 <= check_in_time.hour < 12:
+            return "Sáng"
+        elif 12 <= check_in_time.hour < 18:
+            return "Chiều"
+        else:
+            return "Tối"
 
+    def compute_late_and_early(self, check_out_str):
+        """Tính toán đi muộn về sớm"""
+        self.check_out = check_out_str
+        shift_name = self.detect_shift()
+        std_in, std_out = self.SHIFTS[shift_name]
 
+        # Chuyển đổi sang datetime để so sánh
+        fmt = "%H:%M"
+        t_in = datetime.strptime(self.check_in, fmt)
+        t_out = datetime.strptime(self.check_out, fmt)
+        std_in_dt = datetime.strptime(std_in, fmt)
+        std_out_dt = datetime.strptime(std_out, fmt)
+
+        # Xử lý ca qua đêm (nếu giờ ra nhỏ hơn giờ vào, tức là sang ngày hôm sau)
+        if t_out < t_in:
+            t_out += timedelta(days=1)
+        if std_out_dt < std_in_dt:
+            std_out_dt += timedelta(days=1)
+
+        # Tính đi muộn
+        late = (t_in - std_in_dt).total_seconds() / 60
+        self.late_minutes = int(late) if late > 0 else 0
+
+        # Tính về sớm
+        early = (std_out_dt - t_out).total_seconds() / 60
+        self.leave_minutes = int(early) if early > 0 else 0
 # ===============================
 # 5. ĐƠN LÀM THÊM GIỜ
 # ===============================

@@ -77,12 +77,46 @@ class AttendanceService:
         self.col.insert_one(attendance.__dict__)
         print("Check-in thành công!")
 
-    def check_out(self, employee_id, date, check_out_time):
-        self.col.update_one(
-            {"employee_id": employee_id, "date": date},
-            {"$set": {"check_out": check_out_time}}
+    # def check_out(self, employee_id, date, check_out_time):
+    #     self.col.update_one(
+    #         {"employee_id": employee_id, "date": date},
+    #         {"$set": {"check_out": check_out_time}}
+    #     )
+    #     print("Check-out thành công!")
+    # Trong class AttendanceService
+    def check_out(self, employee_id, date_str, check_out_time):
+        # 1. Lấy dữ liệu check-in cũ
+        record = self.col.find_one({"employee_id": employee_id, "date": date_str})
+        if not record:
+            print("❌ Không tìm thấy dữ liệu Check-in!")
+            return
+
+        # 2. Tạo object để tính toán
+        att = Attendance(
+            attendance_id=record["attendance_id"],
+            employee_id=record["employee_id"],
+            date=record["date"],
+            check_in=record["check_in"]
         )
-        print("Check-out thành công!")
+
+        # 3. Tính toán đi muộn/về sớm
+        try:
+            att.compute_late_and_early(check_out_time)
+        except Exception as e:
+            print(f"Lỗi tính toán: {e}")
+            return
+
+        # 4. Cập nhật kết quả vào DB
+        self.col.update_one(
+            {"_id": record["_id"]},
+            {"$set": {
+                "check_out": check_out_time,
+                "late_minutes": att.late_minutes,
+                "leave_minutes": att.leave_minutes,
+                "status": "Completed"
+            }}
+        )
+        print(f"✅ Check-out xong! Đi muộn: {att.late_minutes}p, Về sớm: {att.leave_minutes}p")
 
     def lay_cham_cong(self, employee_id):
         return list(self.col.find({"employee_id": employee_id}))
