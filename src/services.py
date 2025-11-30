@@ -8,10 +8,8 @@ class NhanVienService:
         self.col = self.db["nhanvien"]
 
     def them_nhan_vien(self, nv: NhanVien):
-       
-        data = nv.__dict__.copy()
         
-        # CHUYỂN ĐỔI DATE/DATETIME SANG CHUỖI AN TOÀN TRƯỚC KHI INSERT
+        data = nv.__dict__.copy()
         for key, value in data.items():
             if isinstance(value, (datetime, date)):
                 data[key] = value.isoformat()
@@ -43,8 +41,6 @@ class DepartmentService:
     def them_phong_ban(self, dept: Department):
   
         data = dept.__dict__.copy()
-
-        # CHUYỂN ĐỔI DATE/DATETIME SANG CHUỖI AN TOÀN TRƯỚC KHI INSERT
         for key, value in data.items():
             if isinstance(value, (datetime, date)):
                 data[key] = value.isoformat()

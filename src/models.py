@@ -1,9 +1,6 @@
 from datetime import *
 
-
-# ===============================
 # 1. NHÂN VIÊN
-# ===============================
 
 class NhanVien:
     def __init__(self, employee_id, ho_ten, ngay_sinh, gioi_tinh, dept_id, position_id, ngay_vao_lam, email, phone, address, status="Active"):
@@ -43,10 +40,7 @@ class NhanVien:
         nvl = datetime.strptime(self.ngay_vao_lam, "%Y-%m-%d").date()
         return today.year - nvl.year - ((today.month, today.day) < (nvl.month, nvl.day))
 
-
-# ===============================
 # 2. PHÒNG BAN
-# ===============================
 
 class Department:
     def __init__(self, dept_id, name, manager_id, created_date, budget):
@@ -76,10 +70,7 @@ class Department:
                 total += s.calculate_net_salary(0)
         return total
 
-
-# ===============================
 # 3. CHỨC VỤ
-# ===============================
 
 class Position:
     def __init__(self, position_id, title, level, min_salary, max_salary, basic_salary):
@@ -90,10 +81,7 @@ class Position:
         self.max_salary = max_salary
         self.basic_salary = basic_salary
 
-
-# ===============================
 # 4. CHẤM CÔNG
-# ===============================
 
 class Attendance:
     # Định nghĩa các ca làm việc (Giờ vào - Giờ ra)

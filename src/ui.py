@@ -1,6 +1,7 @@
 from services import *
 from models import *
 from datetime import datetime, date
+import pandas as pd
 
 nv_service = NhanVienService()
 dept_service = DepartmentService()
@@ -13,7 +14,7 @@ def nhap_khong_trong(label):
     while True:
         val = input(f"{label}: ").strip()
         if val == "":
-            print("❌ Không được để trống! Nhập lại.")
+            print("Không được để trống! Nhập lại.")
             continue
         return val
 
@@ -24,23 +25,20 @@ def nhap_ngay(label):
             datetime.strptime(s, "%Y-%m-%d")
             return s
         except:
-            print("❌ Sai định dạng ngày (YYYY-MM-DD). Hãy nhập lại!")
+            print("Sai định dạng ngày (YYYY-MM-DD). Hãy nhập lại!")
 
 def nhap_float(label):
     while True:
         s = input(f"{label}: ").strip()
         if s == "":
-            print("❌ Không được để trống!")
+            print("Không được để trống!")
             continue
         try:
             return float(s)
         except:
-            print("❌ Giá trị phải là số! Nhập lại.")
+            print("Giá trị phải là số! Nhập lại.")
 
-
-# ================================
 # MENU QUẢN LÝ NHÂN VIÊN
-# ================================
 def menu_nhan_vien():
     while True:
         print("\n=== QUẢN LÝ NHÂN VIÊN ===")
@@ -65,17 +63,18 @@ def menu_nhan_vien():
             phone = nhap_khong_trong("SĐT")
             address = nhap_khong_trong("Địa chỉ")
 
-            nv = NhanVien(employee_id, ho_ten, ngay_sinh, gioi_tinh,
-                           dept_id, position_id, ngay_vao_lam,
-                           email, phone, address)
+            nv = NhanVien(employee_id, ho_ten, ngay_sinh, gioi_tinh,dept_id, position_id, ngay_vao_lam, email, phone, address)
 
             nv_service.them_nhan_vien(nv)
 
         elif ch == "2":
             print("\n--- Danh sách nhân viên ---")
             ds = nv_service.lay_ds_nhan_vien()
-            for nv in ds:
-                print(nv)
+            if ds:
+                df = pd.DataFrame(ds)
+                print(df.to_string(index=False))
+            else:
+                print("📭 Không có dữ liệu!")
 
         elif ch == "3":
             eid = nhap_khong_trong("Nhập ID")
@@ -95,12 +94,9 @@ def menu_nhan_vien():
             break
 
         else:
-            print("❌ Lựa chọn không hợp lệ!")
+            print("Lựa chọn không hợp lệ!")
 
-
-# ================================
 # MENU PHÒNG BAN
-# ================================
 def menu_phong_ban():
     while True:
         print("\n=== PHÒNG BAN ===")
@@ -121,19 +117,20 @@ def menu_phong_ban():
 
         elif ch == "2":
             ds = dept_service.lay_ds_phong_ban()
-            for d in ds:
-                print(d)
+            if ds:
+                df = pd.DataFrame(ds)
+                print(df.to_string(index=False))
+            else:
+                print("Không có dữ liệu!")
 
         elif ch == "0":
             break
 
         else:
-            print("❌ Lựa chọn không hợp lệ!")
+            print("Lựa chọn không hợp lệ!")
 
 
-# ================================
 # MENU CHỨC VỤ
-# ================================
 def menu_chuc_vu():
     while True:
         print("\n=== CHỨC VỤ ===")
@@ -154,19 +151,20 @@ def menu_chuc_vu():
             pos_service.them_chuc_vu(pos)
 
         elif ch == "2":
-            for p in pos_service.lay_ds_chuc_vu():
-                print(p)
+            ds = pos_service.lay_ds_chuc_vu()
+            if ds:
+                df = pd.DataFrame(ds)
+                print(df.to_string(index=False))
+            else:
+                print("📭 Không có dữ liệu!")
 
         elif ch == "0":
             break
 
         else:
-            print("❌ Lựa chọn không hợp lệ!")
+            print("Lựa chọn không hợp lệ!")
 
-
-# ================================
 # MENU CHẤM CÔNG
-# ================================
 def menu_cham_cong():
     while True:
         print("\n=== CHẤM CÔNG ===")
@@ -194,14 +192,20 @@ def menu_cham_cong():
 
         elif ch == "3":
             eid = nhap_khong_trong("ID nhân viên")
-            for item in att_service.lay_cham_cong(eid):
-                print(item)
+            ds = att_service.lay_cham_cong(eid)
+            if ds:
+                df = pd.DataFrame(ds)
+                if '_id' in df.columns:
+                    df = df.drop('_id', axis=1)
+                print(df.to_string(index=False))
+            else:
+                print("Không có dữ liệu!")
 
         elif ch == "0":
             break
 
         else:
-            print("❌ Lựa chọn không hợp lệ!")
+            print("Lựa chọn không hợp lệ!")
 
 # ================================
 # MENU QUẢN LÝ LƯƠNG (MỚI)
@@ -220,18 +224,8 @@ def menu_luong():
             # 1. Lấy thông tin lương cơ bản từ Chức vụ
             nv = nv_service.tim_theo_id(eid)
             if not nv:
-                print("❌ Không tìm thấy nhân viên!")
+                print("Không tìm thấy nhân viên!")
                 continue
-            
-            # Tìm lương cứng của chức vụ này
-            basic_salary = 0
-            for pos in pos_service.lay_ds_chuc_vu():
-                if pos['position_id'] == nv['position_id']:
-                    basic_salary = pos['basic_salary']
-                    break
-            
-            if basic_salary == 0:
-                basic_salary = nhap_float("⚠️ Không thấy mức lương quy định. Nhập lương cứng")
 
             # 2. Quét dữ liệu chấm công để đếm ngày công và phút muộn
             thang = nhap_khong_trong("Nhập tháng (MM)")
@@ -277,17 +271,18 @@ def menu_luong():
         elif ch == "2":
             eid = nhap_khong_trong("Nhập ID nhân viên")
             ds = salary_service.lay_luong_nhan_vien(eid)
-            for l in ds:
-                print(f"Tháng {l['month']}/{l['year']} - Ngày công: {l['working_days']} - Gross: {l.get('gross_salary', 'N/A')}")
+            if ds:
+                df = pd.DataFrame(ds)
+                if '_id' in df.columns:
+                    df = df.drop('_id', axis=1)
+                print(df.to_string(index=False))
+            else:
+                print("Không có dữ liệu!")
 
         elif ch == "0":
             break
 
-
-# ================================
 # MENU CHÍNH
-# ================================
-
 def menu_chinh():
     while True:
         print("\n===== MENU CHÍNH =====")
@@ -305,4 +300,4 @@ def menu_chinh():
         elif ch == "4": menu_luong()
         elif ch == "5": menu_cham_cong()
         elif ch == "0": break
-        else: print("❌ Lựa chọn không hợp lệ!")
+        else: print("Lựa chọn không hợp lệ!")
