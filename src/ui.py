@@ -72,6 +72,8 @@ def menu_nhan_vien():
             ds = nv_service.lay_ds_nhan_vien()
             if ds:
                 df = pd.DataFrame(ds)
+                df = df.drop(columns= '_id')
+                df = df.rename(columns={'employee_id': 'ID', 'ho_ten': 'Họ Tên', 'ngay_sinh': 'Ngày Sinh', 'gioi_tinh': 'Giới Tính', 'dept_id': 'Phòng Ban', 'position_id': 'Chức Vụ', 'ngay_vao_lam': 'Ngày Vào Làm', 'email': 'Email', 'phone': 'SĐT', 'address': 'Địa Chỉ', 'status': 'Trạng Thái'})
                 print(df.to_string(index=False))
             else:
                 print("Không có dữ liệu!")
@@ -119,6 +121,8 @@ def menu_phong_ban():
             ds = dept_service.lay_ds_phong_ban()
             if ds:
                 df = pd.DataFrame(ds)
+                df = df.drop(columns= '_id')
+                df = df.rename(columns={'dept_id': 'ID Phòng Ban', 'name': 'Tên Phòng Ban', 'manager_id': 'Trưởng Phòng', 'created_date': 'Ngày Tạo', 'budget': 'Ngân Sách'})
                 print(df.to_string(index=False))
             else:
                 print("Không có dữ liệu!")
@@ -153,9 +157,11 @@ def menu_chuc_vu():
             ds = pos_service.lay_ds_chuc_vu()
             if ds:
                 df = pd.DataFrame(ds)
+                df = df.drop(columns= '_id')
+                df = df.rename(columns={'position_id': 'ID Chức Vụ', 'title': 'Tên Chức Vụ', 'level': 'Level', 'min_salary': 'Lương Tối Thiểu', 'max_salary': 'Lương Tối Đa'})
                 print(df.to_string(index=False))
             else:
-                print("📭 Không có dữ liệu!")
+                print("Không có dữ liệu!")
 
         elif ch == "0":
             break
