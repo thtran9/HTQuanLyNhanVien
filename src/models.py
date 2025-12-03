@@ -213,6 +213,7 @@ class Attendance:
         # Auto-persist into DB using AttendanceService if available.
         # We do a runtime import and catch exceptions to avoid hard dependency
         # on a configured database for local runs / tests.
+
         try:
             from services import AttendanceService
             AttendanceService().check_in(self)
@@ -410,3 +411,38 @@ class SalaryRecord:
         return gross - deductions
     
 
+# 5. LÀM THÊM GIỜ (Overtime)
+class OvertimeRequest:
+    def __init__(self, request_id, employee_id, date, start_time, end_time, reason, request_status="Pending", approver_id=None):
+        self.request_id = request_id
+        self.employee_id = employee_id
+        self.date = date
+        self.start_time = start_time
+        self.end_time = end_time
+        self.reason = reason
+        self.request_status = request_status
+        self.approver_id = approver_id
+    
+    def calculate_overtime_hours(self):
+        """Tính số giờ làm thêm"""
+        try:
+            start = datetime.strptime(self.start_time, "%H:%M")
+            end = datetime.strptime(self.end_time, "%H:%M")
+            hours = (end - start).seconds / 3600
+            return max(0, hours)
+        except:
+            return 0
+    
+    def approve(self, approver_id):
+        """Duyệt đơn làm thêm"""
+        self.approver_id = approver_id
+        self.request_status = "Approved"
+    
+    def reject(self, approver_id):
+        """Từ chối đơn làm thêm"""
+        self.approver_id = approver_id
+        self.request_status = "Rejected"
+    
+    def is_approved(self):
+        """Kiểm tra đã được duyệt chưa"""
+        return self.request_status == "Approved"
