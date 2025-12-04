@@ -4,29 +4,6 @@ from datetime import datetime, timedelta
 # Cấu hình mặc định cho tính lương
 WORKDAYS_PER_MONTH = 26
 HOURS_PER_DAY = 8
-POSITION_RULES = {
-    "Intern": {
-        "allowance_rate": 0.05,   
-        "bonus_rate": 0.0,        
-        "overtime_multiplier": 1.0
-    },
-    "Nhân viên": {
-        "allowance_rate": 0.1,    
-        "bonus_rate": 0.05,       
-        "overtime_multiplier": 1.5
-    },
-    "Trưởng phòng": {
-        "allowance_rate": 0.2,    
-        "bonus_rate": 0.1,        
-        "overtime_multiplier": 1.2
-    },
-    "Giám đốc": {
-        "allowance_rate": 0.3,    
-        "bonus_rate": 0.2,        
-        "overtime_multiplier": 0 
-    }
-}
-
 # NHÂN VIÊN
 class NhanVien:
     def __init__(self, employee_id, ho_ten, ngay_sinh, gioi_tinh, dept_id, position_id, ngay_vao_lam, email, phone, address, status="Active"):
@@ -154,6 +131,7 @@ class Attendance:
 # 6. BẢNG LƯƠNG
 # ===============================
 
+<<<<<<< HEAD
 # class SalaryRecord:
 #     def __init__(self, salary_id, employee_id, month, year,
 #                  basic_salary, working_days, overtime_hours,
@@ -212,6 +190,15 @@ class Attendance:
 class SalaryRecord:
     def __init__(self, salary_id, employee_id, month, year,
                  working_days, overtime_hours, bonus, kpi, allowance, tax): # Bỏ basic_salary và position khỏi init
+=======
+WORKDAYS_PER_MONTH = 22
+HOURS_PER_DAY = 8
+
+class SalaryRecord:
+    def __init__(self, salary_id, employee_id, month, year,
+                 basic_salary, working_days, overtime_hours,
+                 bonus=0, kpi=0, allowance=0, tax=0, position=""):
+>>>>>>> 2231da0eab8d67d5db8e667f2dc8eb69c403da38
         self.salary_id = salary_id
         self.employee_id = employee_id
         self.month = month
@@ -221,6 +208,7 @@ class SalaryRecord:
         self.bonus = bonus
         self.kpi = kpi
         self.allowance = allowance
+<<<<<<< HEAD
         self.tax = tax  # thuế khác nếu có
     
     # Đổi tên và thêm tham số basic_salary, position vào hàm tính toán
@@ -280,6 +268,36 @@ class SalaryRecord:
     
 # ... (Giữ nguyên các class khác)
 
+=======
+        self.tax = tax
+        self.position = position
+
+    def calculate_basic_salary_by_workdays(self):
+        """Lương cơ bản theo số ngày công"""
+        if WORKDAYS_PER_MONTH == 0:
+            return 0
+        return (self.basic_salary / WORKDAYS_PER_MONTH) * self.working_days
+
+    def calculate_gross_salary(self):
+        """Gross = lương cơ bản (theo ngày công) + OT + bonus + KPI + allowance"""
+        hourly = self.basic_salary / (WORKDAYS_PER_MONTH * HOURS_PER_DAY) if WORKDAYS_PER_MONTH and HOURS_PER_DAY else 0
+        overtime_pay = self.overtime_hours * 1.5 * hourly
+        return (self.calculate_basic_salary_by_workdays()
+                + overtime_pay
+                + self.bonus
+                + self.kpi
+                + self.allowance)
+
+    def calculate_net_salary(self, late_minutes=0):
+        """Net = Gross - các khoản khấu trừ"""
+        gross = self.calculate_gross_salary()
+        bhxh = 0.101 * self.basic_salary
+        cong_doan = 0.01 * self.basic_salary
+        thue_tncn = 0.05 * self.basic_salary
+        phat_di_muon = 2000 * late_minutes
+        deductions = bhxh + cong_doan + thue_tncn + phat_di_muon + self.tax
+        return gross - deductions
+>>>>>>> 2231da0eab8d67d5db8e667f2dc8eb69c403da38
 # 5. LÀM THÊM GIỜ (Overtime)
 class OvertimeRequest:
     def __init__(self, request_id, employee_id, date, start_time, end_time, reason, request_status="Pending", approver_id=None):
