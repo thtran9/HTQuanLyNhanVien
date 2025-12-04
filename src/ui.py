@@ -291,7 +291,7 @@ def menu_cham_cong():
             print("Lựa chọn không hợp lệ!")
 
 # MENU QUẢN LÝ LƯƠNG
-def menu_luong():
+# def menu_luong():
     while True:
         print("\n=== QUẢN LÝ LƯƠNG ===")
         print("1. Tính lương tháng")
@@ -361,6 +361,91 @@ def menu_luong():
 
         elif ch == "0":
             break
+
+# ... (Giữ nguyên các hàm khác)
+
+# MENU QUẢN LÝ LƯƠNG
+def menu_luong():
+    while True:
+        # ... (menu_luong code)
+        print("\n=== QUẢN LÝ LƯƠNG ===")
+        print("1. Tính lương tháng")
+        print("2. Xem bảng lương nhân viên")
+        print("0. Quay lại")
+        ch = input("Chọn: ").strip()
+        if ch == "1":
+            eid = nhap_khong_trong("Nhập ID nhân viên")
+            
+            # 1. Lấy thông tin LƯƠNG CƠ BẢN và CHỨC VỤ
+            nv_data = nv_service.tim_theo_id(eid)
+            if not nv_data:
+                print("Không tìm thấy nhân viên!")
+                continue
+            
+            # Lấy thông tin nhân viên (chỉ lấy phần tử đầu tiên)
+            nv = nv_data[0]
+            
+            # Lấy thông tin Chức vụ để tìm Lương cơ bản
+            ds_cv = pos_service.lay_ds_chuc_vu()
+            
+            basic_salary = 0.0
+            position_title = "Nhân viên" # Default position title
+            
+            for cv in ds_cv:
+                if cv['position_id'] == nv['position_id']:
+                    basic_salary = cv.get('min_salary', 0.0)
+                    position_title = cv.get('title', "Nhân viên")
+                    break
+            
+            if basic_salary == 0.0:
+                print(f"Không tìm thấy Lương tối thiểu cho chức vụ: {nv['position_id']}! Dùng lương cơ bản = 0.")
+
+            # 2. Quét dữ liệu chấm công để đếm ngày công và phút muộn
+            thang = nhap_khong_trong("Nhập tháng (MM)")
+            nam = nhap_khong_trong("Nhập năm (YYYY)")
+            
+            # ... (Giữ nguyên logic đếm ngày công và phút muộn)
+            ds_cc = att_service.lay_cham_cong(eid)
+            ngay_cong = 0
+            tong_muon = 0
+            
+            for cc in ds_cc:
+                # cc['date'] dạng YYYY-MM-DD
+                y, m, d = cc['date'].split('-')
+                if y == nam and m == thang and cc.get('check_out'):
+                    ngay_cong += 1
+                    tong_muon += cc.get('late_minutes', 0)
+
+            print(f"📊 Thống kê: {ngay_cong} ngày công, {tong_muon} phút đi muộn.")
+
+            # 3. Nhập các chỉ số khác
+            ot_hours = nhap_float("Số giờ OT")
+            bonus_extra = nhap_float("Thưởng (nhập thêm)") # Đổi tên biến để tránh nhầm với thưởng theo quy tắc
+            kpi = nhap_float("Thưởng KPI")
+            allowance_extra = nhap_float("Phụ cấp (nhập thêm)") # Đổi tên biến để tránh nhầm với phụ cấp theo quy tắc
+
+            # 4. Tính toán (Sử dụng constructor đã sửa và gọi hàm tính NET)
+            salary_id = f"SAL-{eid}-{nam}{thang}"
+            # Truyền các giá trị đã sửa vào constructor
+            rec = SalaryRecord(salary_id, eid, int(thang), int(nam), ngay_cong, ot_hours, bonus_extra, kpi, allowance_extra, tax=0)
+            
+            # Tính Lương Net bằng cách truyền Lương cơ bản, Chức vụ và phút muộn
+            net = rec.calculate_net_salary(basic_salary, position_title, tong_muon) 
+            gross = rec.gross_salary
+            
+            print("-" * 30)
+            print(f"   LƯƠNG THÁNG {thang}/{nam} ({position_title})")
+            print(f"   Lương Cơ Bản: {basic_salary:,.0f}")
+            print(f"   Lương Gross: {gross:,.0f}")
+            PHAT_DI_MUON_MOT_PHUT = 2000
+            print(f"   Phạt đi muộn: -{tong_muon * PHAT_DI_MUON_MOT_PHUT:,.0f}")
+            print(f"   Lương NET:   {net:,.0f}")
+            print("-" * 30)
+
+            if input("Lưu bảng lương? (y/n): ").lower() == 'y':
+                salary_service.luu_bang_luong(rec)
+
+        # ... (Giữ nguyên lựa chọn 2 và 0)
 
 # MENU CHÍNH
 def menu_chinh():
