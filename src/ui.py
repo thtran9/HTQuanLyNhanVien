@@ -38,21 +38,6 @@ def nhap_float(label):
         except:
             print("Giá trị phải là số! Nhập lại.")
 
-
-def nhap_float_default(label, default):
-    """Nhập số, nhấn Enter để dùng giá trị mặc định."""
-    while True:
-        s = input(f"{label} [{default}]: ").strip()
-        if s == "":
-            try:
-                return float(default)
-            except:
-                return 0.0
-        try:
-            return float(s)
-        except:
-            print("Giá trị phải là số! Nhập lại.")
-
 # MENU QUẢN LÝ NHÂN VIÊN
 def menu_nhan_vien():
     while True:
@@ -262,13 +247,14 @@ def menu_cham_cong():
                         record["employee_id"],
                         record["date"]
                     )
-                    a.check_in = record.get("check_in")  # Restore check-in từ DB
+                    # Chuyển đổi chuỗi check_in thành đối tượng datetime
+                    if record.get("check_in"):
+                        a.check_in = datetime.strptime(record["check_in"], "%Y-%m-%d %H:%M:%S")
                     
                     # Gọi mark_check_out() - tự động lấy thời gian hiện tại
                     a.mark_check_out()
                     
-                    # Cập nhật vào DB (gọi check_out của service - nhưng cần sửa service)
-                    # Tạm thời: cập nhật trực tiếp
+                    # Cập nhật vào DB
                     att_service.col.update_one(
                         {"_id": record["_id"]},
                         {"$set": {
@@ -306,102 +292,14 @@ def menu_cham_cong():
             print("Lựa chọn không hợp lệ!")
 
 # MENU QUẢN LÝ LƯƠNG
-# def menu_luong():
-    while True:
-        print("\n=== QUẢN LÝ LƯƠNG ===")
-        print("1. Tính lương tháng")
-        print("2. Xem bảng lương nhân viên")
-        print("0. Quay lại")
-        ch = input("Chọn: ").strip()
-
-        if ch == "1":
-          # CASE 1: Tính lương tháng
-            eid = nhap_khong_trong("Nhập ID nhân viên")
-            emp = nv_service.tim_theo_id(eid)
-            if not emp:
-                print("Không tìm thấy nhân viên!")
-                continue
-
-            thang = nhap_khong_trong("Nhập tháng (MM)")
-            nam = nhap_khong_trong("Nhập năm (YYYY)")
-
-            # Lấy dữ liệu chấm công
-            ds_cc = att_service.lay_cham_cong(eid)
-            ngay_cong = sum(1 for cc in ds_cc if cc['date'].startswith(f"{nam}-{thang}") and cc.get('check_out'))
-            tong_muon = sum(cc.get('late_minutes', 0) for cc in ds_cc if cc['date'].startswith(f"{nam}-{thang}"))
-
-            print(f"Thống kê: {ngay_cong} ngày công, {tong_muon} phút đi muộn.")
-
-            # Lấy lương cơ bản từ chức vụ
-            pos_list = pos_service.lay_ds_chuc_vu()
-            pos = next((p for p in pos_list if p.get('position_id') == emp.get('position_id')), None)
-            default_basic = pos.get('min_salary', 0) if pos else 0
-
-            # Nhập các khoản khác
-            basic_salary = nhap_float_default("Lương cơ bản", default_basic)
-            ot_hours = nhap_float("Số giờ OT")
-            bonus = nhap_float("Thưởng")
-            kpi = nhap_float("Thưởng KPI")
-            allowance = nhap_float("Phụ cấp")
-
-            # Tạo record lương
-            rec = SalaryRecord(
-                f"SAL-{eid}-{nam}{thang}",
-                eid,
-                int(thang),
-                int(nam),
-                basic_salary,
-                ngay_cong,
-                ot_hours,
-                bonus,
-                kpi,
-                allowance,
-                tax=0,
-                position=(pos.get('title') if pos else None)
-            )
-
-            gross = rec.calculate_gross_salary()
-            net = rec.calculate_net_salary(tong_muon)
-
-            print("-" * 30)
-            print(f"LƯƠNG THÁNG {thang}/{nam}")
-            print(f"Lương Gross: {gross:,.0f}")
-            print(f"Phạt đi muộn: -{tong_muon * 2000:,.0f}")
-            print(f"Lương NET:   {net:,.0f}")
-            print("-" * 30)
-
-            if input("Lưu bảng lương? (y/n): ").lower() == 'y':
-                rec.gross = gross
-                rec.net = net
-                salary_service.luu_bang_luong(rec)
-
-       
-
-        elif ch == "2":
-            eid = nhap_khong_trong("Nhập ID nhân viên")
-            ds = salary_service.lay_luong_nhan_vien(eid)
-            if ds:
-                df = pd.DataFrame(ds)
-                if '_id' in df.columns:
-                    df = df.drop('_id', axis=1)
-                print(df.to_string(index=False))
-            else:
-                print("Không có dữ liệu!")
-
-        elif ch == "0":
-            break
-
-# ... (Giữ nguyên các hàm khác)
-
-# MENU QUẢN LÝ LƯƠNG
 def menu_luong():
     while True:
-        # ... (menu_luong code)
         print("\n=== QUẢN LÝ LƯƠNG ===")
         print("1. Tính lương tháng")
         print("2. Xem bảng lương nhân viên")
         print("0. Quay lại")
-        ch = input("Chọn: ").strip()
+        ch = input("Chọn: ").strip() # Dòng này định nghĩa biến 'ch' (Khắc phục NameError)
+
         if ch == "1":
             eid = nhap_khong_trong("Nhập ID nhân viên")
             
@@ -410,7 +308,7 @@ def menu_luong():
             if not nv_data:
                 print("Không tìm thấy nhân viên!")
                 continue
-            
+
             # Lấy thông tin nhân viên (chỉ lấy phần tử đầu tiên)
             nv = nv_data[0]
             
@@ -433,7 +331,6 @@ def menu_luong():
             thang = nhap_khong_trong("Nhập tháng (MM)")
             nam = nhap_khong_trong("Nhập năm (YYYY)")
             
-            # ... (Giữ nguyên logic đếm ngày công và phút muộn)
             ds_cc = att_service.lay_cham_cong(eid)
             ngay_cong = 0
             tong_muon = 0
@@ -442,20 +339,20 @@ def menu_luong():
                 # cc['date'] dạng YYYY-MM-DD
                 y, m, d = cc['date'].split('-')
                 if y == nam and m == thang and cc.get('check_out'):
-                    ngay_cong += 1
+                    # Sử dụng trực tiếp late_minutes đã tính và lưu trong DB
                     tong_muon += cc.get('late_minutes', 0)
+                    ngay_cong += 1
 
-            print(f"📊 Thống kê: {ngay_cong} ngày công, {tong_muon} phút đi muộn.")
+            print(f"📊 Thống kê: {ngay_cong} ngày công, {tong_muon} phút đi muộn. Lương cơ bản: {basic_salary:,.0f} VNĐ")
 
             # 3. Nhập các chỉ số khác
             ot_hours = nhap_float("Số giờ OT")
-            bonus_extra = nhap_float("Thưởng (nhập thêm)") # Đổi tên biến để tránh nhầm với thưởng theo quy tắc
+            bonus_extra = nhap_float("Thưởng (nhập thêm)") 
             kpi = nhap_float("Thưởng KPI")
-            allowance_extra = nhap_float("Phụ cấp (nhập thêm)") # Đổi tên biến để tránh nhầm với phụ cấp theo quy tắc
+            allowance_extra = nhap_float("Phụ cấp (nhập thêm)") 
 
-            # 4. Tính toán (Sử dụng constructor đã sửa và gọi hàm tính NET)
+            # 4. Tính toán
             salary_id = f"SAL-{eid}-{nam}{thang}"
-            # Truyền các giá trị đã sửa vào constructor
             rec = SalaryRecord(salary_id, eid, int(thang), int(nam), ngay_cong, ot_hours, bonus_extra, kpi, allowance_extra, tax=0)
             
             # Tính Lương Net bằng cách truyền Lương cơ bản, Chức vụ và phút muộn
@@ -466,7 +363,6 @@ def menu_luong():
             print(f"   LƯƠNG THÁNG {thang}/{nam} ({position_title})")
             print(f"   Lương Cơ Bản: {basic_salary:,.0f}")
             print(f"   Lương Gross: {gross:,.0f}")
-            PHAT_DI_MUON_MOT_PHUT = 2000
             print(f"   Phạt đi muộn: -{tong_muon * PHAT_DI_MUON_MOT_PHUT:,.0f}")
             print(f"   Lương NET:   {net:,.0f}")
             print("-" * 30)
@@ -474,7 +370,22 @@ def menu_luong():
             if input("Lưu bảng lương? (y/n): ").lower() == 'y':
                 salary_service.luu_bang_luong(rec)
 
-        # ... (Giữ nguyên lựa chọn 2 và 0)
+        elif ch == "2":
+            eid = nhap_khong_trong("Nhập ID nhân viên")
+            ds = salary_service.lay_luong_nhan_vien(eid)
+            if ds:
+                df = pd.DataFrame(ds)
+                if '_id' in df.columns:
+                    df = df.drop('_id', axis=1)
+                print(df.to_string(index=False))
+            else:
+                print("Không có dữ liệu!")
+
+        elif ch == "0":
+            break
+        
+        else:
+            print("Lựa chọn không hợp lệ!")
 
 # MENU CHÍNH
 def menu_chinh():
