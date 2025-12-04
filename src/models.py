@@ -129,9 +129,7 @@ class Attendance:
 
 # ===============================
 # 6. BẢNG LƯƠNG
-# ===============================
-
-<<<<<<< HEAD
+# =============================AD
 # class SalaryRecord:
 #     def __init__(self, salary_id, employee_id, month, year,
 #                  basic_salary, working_days, overtime_hours,
@@ -198,7 +196,7 @@ class SalaryRecord:
     def __init__(self, salary_id, employee_id, month, year,
                  basic_salary, working_days, overtime_hours,
                  bonus=0, kpi=0, allowance=0, tax=0, position=""):
->>>>>>> 2231da0eab8d67d5db8e667f2dc8eb69c403da38
+
         self.salary_id = salary_id
         self.employee_id = employee_id
         self.month = month
@@ -208,7 +206,7 @@ class SalaryRecord:
         self.bonus = bonus
         self.kpi = kpi
         self.allowance = allowance
-<<<<<<< HEAD
+
         self.tax = tax  # thuế khác nếu có
     
     # Đổi tên và thêm tham số basic_salary, position vào hàm tính toán
@@ -268,7 +266,7 @@ class SalaryRecord:
     
 # ... (Giữ nguyên các class khác)
 
-=======
+
         self.tax = tax
         self.position = position
 
@@ -297,7 +295,7 @@ class SalaryRecord:
         phat_di_muon = 2000 * late_minutes
         deductions = bhxh + cong_doan + thue_tncn + phat_di_muon + self.tax
         return gross - deductions
->>>>>>> 2231da0eab8d67d5db8e667f2dc8eb69c403da38
+
 # 5. LÀM THÊM GIỜ (Overtime)
 class OvertimeRequest:
     def __init__(self, request_id, employee_id, date, start_time, end_time, reason, request_status="Pending", approver_id=None):
